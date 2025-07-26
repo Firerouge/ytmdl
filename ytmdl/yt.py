@@ -385,8 +385,17 @@ def __get_title_from_yt(url, ytdl_config: str = None):
 
     try:
         data = ydl.extract_info(url, False)
+
+        # When ignore-errors is passed to yt-dlp, it suppresses
+        # the DownloadError and returns ``None`` for unavailable
+        # videos. Handle such a case explicitly so that callers
+        # can decide what to do with the failure.
+        if data is None:
+            raise ExtractError(url)
+
         return stringutils.remove_yt_words(data["title"])
     except DownloadError:
+        # Video couldn't be downloaded/extracted
         raise ExtractError(url)
     except KeyError:
         logger.error("Wasn't able to extract the name of the song.")
@@ -436,6 +445,13 @@ def get_chapters(url, ytdl_config: str = None):
     ydl_opts = ydl_opts_with_config(ytdl_config=ytdl_config)
 
     info = yt_dlp.YoutubeDL(ydl_opts).extract_info(url, False)
+
+    # When ignore-errors is passed to yt-dlp, unavailable videos
+    # result in ``None`` being returned here. Handle it explicitly
+    # so the caller knows that the chapter data couldn't be
+    # retrieved.
+    if info is None:
+        raise ExtractError(url)
 
     return info.get("chapters", None)
 
