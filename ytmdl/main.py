@@ -298,7 +298,18 @@ def main(args):
         return
 
     # Try to extract the chapters
-    chapters = yt.get_chapters(link, args.ytdl_config)
+    try:
+        chapters = yt.get_chapters(link, args.ytdl_config)
+    except ExtractError:
+        if args.ignore_errors:
+            logger.info("--ignore-errors passed. Skipping this song!")
+            return
+
+        logger.critical(
+            "Wasn't able to extract chapter data.",
+            "Use `--ignore-errors` to ignore this error"
+        )
+        return
 
     # Add the current passed song as the only entry here
     # This dictionary will be cleared if the song is found to be containing

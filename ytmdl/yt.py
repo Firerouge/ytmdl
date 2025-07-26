@@ -446,6 +446,13 @@ def get_chapters(url, ytdl_config: str = None):
 
     info = yt_dlp.YoutubeDL(ydl_opts).extract_info(url, False)
 
+    # When ignore-errors is passed to yt-dlp, unavailable videos
+    # result in ``None`` being returned here. Handle it explicitly
+    # so the caller knows that the chapter data couldn't be
+    # retrieved.
+    if info is None:
+        raise ExtractError(url)
+
     return info.get("chapters", None)
 
 
